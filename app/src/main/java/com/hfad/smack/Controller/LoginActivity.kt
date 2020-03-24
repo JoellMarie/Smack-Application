@@ -1,10 +1,9 @@
-package com.hfad.smack.ui
+package com.hfad.smack.Controller
 
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
-import com.hfad.smack.CreateUserActivity
 import com.hfad.smack.R
 
 class LoginActivity : AppCompatActivity() {
