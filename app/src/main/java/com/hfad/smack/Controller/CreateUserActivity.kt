@@ -5,8 +5,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import com.hfad.smack.R
+import com.hfad.smack.Services.AuthService
 import kotlinx.android.synthetic.main.activity_create_user.*
 import java.util.*
+
+
 
 class CreateUserActivity : AppCompatActivity() {
     var userAvatar = "profileDefault"
@@ -45,7 +48,10 @@ class CreateUserActivity : AppCompatActivity() {
         //println(avatarColor)
     }
 
-    fun createUserClicked (view: View){
-
+    fun createUserClicked (view: View) {
+        AuthService.registerUser(this, "jbob.com", "123456") { complete ->
+            if (complete) {
+            }
+        }
     }
 }
