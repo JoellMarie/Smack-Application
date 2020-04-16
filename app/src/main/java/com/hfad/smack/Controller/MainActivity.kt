@@ -18,7 +18,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.EditText
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.AppCompatTextView
@@ -31,10 +31,17 @@ import com.hfad.smack.Utilities.BROADCAST_USER_DATA_CHANGE
 import com.hfad.smack.Utilities.SOCKET_URL
 import io.socket.client.IO
 import io.socket.emitter.Emitter
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.nav_header_main.*
 
 class MainActivity : AppCompatActivity() {
     val socket = IO.socket(SOCKET_URL)
+    lateinit var channelAdapter: ArrayAdapter<Channel>
+
+    private fun setUpAdapters(){
+        channelAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, MessageService.channels)
+        channel_list.adapter = channelAdapter
+    }
 
     private lateinit var appBarConfiguration: AppBarConfiguration
 
@@ -65,6 +72,7 @@ class MainActivity : AppCompatActivity() {
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
 
+        setUpAdapters()
     }
 
     override fun onResume() {
@@ -72,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         LocalBroadcastManager.getInstance(this)
             .registerReceiver(userDataChangeReceiver, IntentFilter(BROADCAST_USER_DATA_CHANGE))
         super.onResume()
+
     }
 
     override fun onDestroy() {
@@ -81,7 +90,7 @@ class MainActivity : AppCompatActivity() {
     }
     private val userDataChangeReceiver = object : BroadcastReceiver() {
 
-        override fun onReceive(context: Context?, intent: Intent?) {
+        override fun onReceive(context: Context, intent: Intent?) {
 
             if (AuthService.isLoggedIn) {
                 userNameNavHeader.text = UserDataService.name
@@ -98,7 +107,12 @@ class MainActivity : AppCompatActivity() {
                 )
                 loginButtonNavHeader.text = "Logout"
 
+                MessageService.getChannels(context) { complete ->
+                    if(complete){
+                        channelAdapter.notifyDataSetChanged()
+                    }
 
+                }
             }
         }
     }
@@ -133,7 +147,7 @@ class MainActivity : AppCompatActivity() {
             builder.setView(dialogView)
                 .setPositiveButton("Add") { dialogInterface, i ->
                     // perform some logic when clicked
-                    val nameTextField = dialogView.findViewById<AppCompatTextView>(R.id.addChannelNameTxt)
+                    val nameTextField = dialogView.findViewById<AppCompatEditText>(R.id.addChannelNameTxt)
                     val descTextField = dialogView.findViewById<AppCompatEditText>(R.id.addChannelDescTxt)
                     val channelName = nameTextField.text.toString()
                     val channelDesc = descTextField.text.toString()
@@ -153,13 +167,15 @@ class MainActivity : AppCompatActivity() {
        // private val onNewChannel = Emitter.Listener {args ->}
     }
     private val onNewChannel = Emitter.Listener{ args ->
-        runOnUiThread {
+
+        runOnUiThread { println(args)
             val channelName = args[0] as String
             val channelDescription = args[1] as String
             val channelId = args[2] as String
 
             val newChannel = Channel(channelName, channelDescription, channelId)
             MessageService.channels.add(newChannel)
+            channelAdapter.notifyDataSetChanged()
             println(newChannel.name)
             println(newChannel.description)
             println(newChannel.id)
